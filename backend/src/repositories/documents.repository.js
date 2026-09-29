@@ -26,8 +26,26 @@ function findOwnedById(id, owner) {
   return document && document.owner === owner ? document : null;
 }
 
+function getStoragePath(storedName) {
+  if (typeof storedName !== 'string' || !storedName || path.basename(storedName) !== storedName) {
+    const error = new Error('Nome de arquivo armazenado inválido.');
+    error.code = 'INVALID_STORED_NAME';
+    throw error;
+  }
+
+  const filePath = path.resolve(storageDirectory, storedName);
+  const relativePath = path.relative(storageDirectory, filePath);
+  if (relativePath === '..' || relativePath.startsWith(`..${path.sep}`) || path.isAbsolute(relativePath)) {
+    const error = new Error('Nome de arquivo armazenado inválido.');
+    error.code = 'INVALID_STORED_NAME';
+    throw error;
+  }
+
+  return filePath;
+}
+
 async function getLocalFile(document) {
-  const filePath = path.join(storageDirectory, document.storedName);
+  const filePath = getStoragePath(document.storedName);
 
   try {
     await fs.access(filePath);
@@ -40,7 +58,7 @@ async function getLocalFile(document) {
 
 async function removeFile(storedName) {
   try {
-    await fs.unlink(path.join(storageDirectory, storedName));
+    await fs.unlink(getStoragePath(storedName));
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }

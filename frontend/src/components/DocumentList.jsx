@@ -13,7 +13,7 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
-export default function DocumentList({ documents, loading, onDownload }) {
+export default function DocumentList({ documents, loading, listError, onRetry, onDownload }) {
   return (
     <section className="document-section" aria-labelledby="documents-heading">
       <div className="list-heading">
@@ -28,6 +28,11 @@ export default function DocumentList({ documents, loading, onDownload }) {
 
       {loading ? (
         <p className="list-message" role="status">Carregando documentos...</p>
+      ) : listError ? (
+        <div className="list-error" role="alert">
+          <p>Não foi possível carregar os documentos: {listError}</p>
+          <button type="button" onClick={onRetry}>Tentar novamente</button>
+        </div>
       ) : documents.length === 0 ? (
         <div className="empty-state">
           <span className="empty-state-mark" aria-hidden="true">—</span>
