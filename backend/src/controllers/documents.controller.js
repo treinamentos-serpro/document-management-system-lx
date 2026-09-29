@@ -26,7 +26,12 @@ function list(req, res) {
 
 async function download(req, res) {
   const file = await documentsService.getDocumentForDownload(req.params.id, req.userId);
-  res.type(file.mimeType).download(file.filePath, file.originalName);
+  res.download(file.filePath, file.originalName, {
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
 }
 
 module.exports = { requireUserId, upload, list, download };

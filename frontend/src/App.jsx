@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DocumentList from './components/DocumentList.jsx';
 import UploadComponent from './components/UploadComponent.jsx';
 import { downloadDocument, listDocuments, uploadDocument } from './services/documentsApi.js';
@@ -6,34 +6,38 @@ import './App.css';
 
 export default function App() {
   const initialUserId = localStorage.getItem('dms-user-id') || 'usuario-local';
+  const currentUserId = useRef(initialUserId);
   const [userId, setUserId] = useState(initialUserId);
   const [userIdDraft, setUserIdDraft] = useState(initialUserId);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [listError, setListError] = useState(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState(null);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setListError(null);
     setDocuments([]);
-    setNotice(null);
     listDocuments(userId)
       .then((payload) => {
         if (active) setDocuments(payload.documents);
       })
       .catch((error) => {
-        if (active) setNotice({ type: 'error', message: error.message });
+        if (active) setListError(error.message);
       })
       .finally(() => {
         if (active) setLoading(false);
       });
 
     return () => { active = false; };
-  }, [userId]);
+  }, [userId, refreshVersion]);
 
   function handleUserSubmit(event) {
     event.preventDefault();
+    if (uploading) return;
     const nextUserId = userIdDraft.trim();
     if (!nextUserId) {
       setNotice({ type: 'error', message: 'Informe um identificador de usuário.' });
@@ -41,18 +45,21 @@ export default function App() {
     }
 
     localStorage.setItem('dms-user-id', nextUserId);
+    currentUserId.current = nextUserId;
     setNotice(null);
     setUserId(nextUserId);
   }
 
   async function handleUpload(file) {
+    const owner = userId;
     setUploading(true);
     setNotice(null);
     try {
-      await uploadDocument(userId, file);
-      const payload = await listDocuments(userId);
-      setDocuments(payload.documents);
+      await uploadDocument(owner, file);
       setNotice({ type: 'success', message: 'Documento enviado com sucesso.' });
+      if (currentUserId.current === owner) {
+        setRefreshVersion((version) => version + 1);
+      }
       return true;
     } catch (error) {
       setNotice({ type: 'error', message: error.message });
@@ -87,7 +94,7 @@ export default function App() {
             onChange={(event) => setUserIdDraft(event.target.value)}
             aria-label="Identificador do usuário local"
           />
-          <button type="submit">Aplicar</button>
+          <button type="submit" disabled={uploading}>Aplicar</button>
         </form>
       </header>
 
@@ -106,7 +113,13 @@ export default function App() {
 
         <div className="workspace">
           <UploadComponent onUpload={handleUpload} uploading={uploading} />
-          <DocumentList documents={documents} loading={loading} onDownload={handleDownload} />
+          <DocumentList
+            documents={documents}
+            loading={loading}
+            listError={listError}
+            onRetry={() => setRefreshVersion((version) => version + 1)}
+            onDownload={handleDownload}
+          />
         </div>
 
         <footer className="footer-note">

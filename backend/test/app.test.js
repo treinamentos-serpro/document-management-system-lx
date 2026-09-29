@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
 const app = require('../src/app');
+const documentsRepository = require('../src/repositories/documents.repository');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const storagePath = path.resolve(__dirname, '../storage');
@@ -10,6 +11,17 @@ const storagePath = path.resolve(__dirname, '../storage');
 test('o app backend é exportado', () => {
   assert.ok(app, 'o app deve estar definido');
   assert.strictEqual(typeof app, 'function', 'o app Express deve ser uma função');
+});
+
+test('o repositório rejeita nomes que escapam do diretório de storage', async () => {
+  await assert.rejects(
+    documentsRepository.getLocalFile({ storedName: '../../README.md' }),
+    { code: 'INVALID_STORED_NAME' },
+  );
+  await assert.rejects(
+    documentsRepository.removeFile('../../README.md'),
+    { code: 'INVALID_STORED_NAME' },
+  );
 });
 
 test('upload, listagem e download ficam restritos ao proprietário', async () => {
@@ -31,6 +43,16 @@ test('upload, listagem e download ficam restritos ao proprietário', async () =>
     });
     assert.strictEqual(missingFileResponse.status, 400);
     assert.strictEqual((await missingFileResponse.json()).error.code, 'FILE_REQUIRED');
+
+    const extraFieldFormData = new FormData();
+    extraFieldFormData.append('note', 'campo não permitido');
+    extraFieldFormData.append('file', new Blob(['conteudo']), 'relatorio.txt');
+    const extraFieldResponse = await fetch(`${baseUrl}/upload`, {
+      method: 'POST',
+      headers: { 'X-User-Id': 'usuario-teste' },
+      body: extraFieldFormData,
+    });
+    assert.strictEqual(extraFieldResponse.status, 400);
 
     const formData = new FormData();
     formData.append('file', new Blob(['conteudo do documento']), 'relatorio.txt');
@@ -79,6 +101,8 @@ test('upload, listagem e download ficam restritos ao proprietário', async () =>
       { headers: { 'X-User-Id': 'usuario-teste' } },
     );
     assert.strictEqual(downloadResponse.status, 200);
+    assert.strictEqual(downloadResponse.headers.get('content-type'), 'application/octet-stream');
+    assert.strictEqual(downloadResponse.headers.get('x-content-type-options'), 'nosniff');
     assert.strictEqual(await downloadResponse.text(), 'conteudo do documento');
   } finally {
     await new Promise((resolve, reject) => {

@@ -29,7 +29,7 @@ export default function UploadComponent({ onUpload, uploading }) {
         <span className="file-picker-mark" aria-hidden="true">+</span>
         <span className="file-picker-copy">
           <strong>{file ? file.name : 'Escolha um arquivo'}</strong>
-          <small>{file ? `${(file.size / 1024).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} KB` : 'Qualquer formato · até 10 MB'}</small>
+          <small>{file ? `${(file.size / 1024).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} KB` : 'Qualquer formato · limite do servidor'}</small>
         </span>
         <span className="file-picker-action">Procurar</span>
       </label>
