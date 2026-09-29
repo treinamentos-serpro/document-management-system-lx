@@ -4,7 +4,7 @@ async function readError(response) {
   try {
     const payload = await response.json();
     return payload?.error?.message || 'Não foi possível concluir a operação.';
-  } catch {
+  } catch { 
     return 'Não foi possível concluir a operação.';
   }
 }

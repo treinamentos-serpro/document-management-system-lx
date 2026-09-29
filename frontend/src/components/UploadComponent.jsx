@@ -6,7 +6,7 @@ export default function UploadComponent({ onUpload, uploading }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!file || uploading) return;
+    if (!file || uploading) return; 
 
     const uploaded = await onUpload(file);
     if (uploaded) {

@@ -5,7 +5,7 @@ export default function DownloadButton({ onDownload, document }) {
 
   async function handleDownload() {
     setDownloading(true);
-    try {
+    try { 
       await onDownload(document);
     } finally {
       setDownloading(false);
