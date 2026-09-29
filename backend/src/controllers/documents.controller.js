@@ -6,7 +6,7 @@ function requireUserId(req, res, next) {
   if (!owner || !owner.trim()) {
     return next(documentsService.httpError(
       400,
-      'INVALID_USER_ID',
+      'INVALID_USER_ID', 
       'O cabeçalho X-User-Id é obrigatório.',
     ));
   }

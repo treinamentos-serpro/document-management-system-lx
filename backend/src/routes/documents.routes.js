@@ -29,7 +29,7 @@ const upload = multer({
   limits: { fileSize: maxFileSize, files: 1 },
 });
 
-router.post(
+router.post( 
   '/upload',
   documentsController.requireUserId,
   upload.single('file'),

@@ -11,7 +11,7 @@ function toPublicDocument(document) {
 
 async function add(document) {
   documents.set(document.id, document);
-  return toPublicDocument(document);
+  return toPublicDocument(document); 
 }
 
 function findByOwner(owner) {

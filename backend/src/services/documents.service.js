@@ -16,7 +16,7 @@ function sanitizeOriginalName(name) {
     .split('/')
     .pop()
     .replace(/[\u0000-\u001f\u007f]/g, '')
-    .trim();
+    .trim(); 
 
   return basename || 'document';
 }
